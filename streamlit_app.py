@@ -1,90 +1,101 @@
+# study_planner_app_local.py
 import streamlit as st
-
-st.title("🎈 범박이의 첫 번째 앱! ")
-
-
-st.success("일리아")
-st.info("토푸리아")
-st.image("https://i.namu.wiki/i/cWV-60JSKEwSOQZLtIFTX68hWuRMdZLsFNYkV2iTHiZ25cJl0rEeE4GBSEvUgy_mmdN6GHFBSogvfGCNtW7fkA.webp")
-
-# st.markdown(): 마크다운 문법 지원 (굵게, 기울임, 목록 등)
-st.markdown("**굵은 텍스트**, *기울임 텍스트*")
-st.markdown("""- 첫 번째 항목
-- 두 번째 항목
-- 여러 줄을 쓸 때""")
-
-# 페이지 구조용 제목 출력
-st.title("메인 제목입니다")
-st.header("중간 제목입니다")
-st.subheader("하위 제목입니다")
-
-# 수평선 (구분선) 출력
-st.markdown("---")  # 또는
-st.divider()        # Streamlit >= 1.22 이상에서 가능
-
-# LaTeX 수식 출력
-st.latex(r"E = mc^2")
-st.latex(r"\int_{a}^{b} x^2 dx = \frac{b^3 - a^3}{3}")
-
-# 정보성 메시지 박스
-st.info("ℹ️ 정보 메시지입니다.")
-st.warning("⚠️ 경고 메시지입니다.")
-st.success("✅ 성공 메시지입니다.")
-st.error("❌ 오류 메시지입니다.")
-
-# 영상 출력
-st.video("https://youtu.be/4J7EqOB9sTo?si=S3DgLIUhVp-qFOMn")
-st.video("https://youtu.be/soSLgKeBQm4?si=VrjDSJ2JsgBxEuPL")
-
-# 지도 출력
 import pandas as pd
-df = pd.DataFrame({"lat": [37.5], "lon": [127.0]})
-st.map(df, zoom=15)
+import datetime
+import random
 
-st.link_button("네이버 바로가기","https://naver.com")
+st.set_page_config(page_title="AI 없는 학습 플래너", layout="wide")
 
-# st.tabs(["이름1", "이름2", ...]): 탭 인터페이스 생성
-tab1, tab2 = st.tabs(["탭 1", "탭 2"])  # 2개의 탭 생성
+# ---------------------------
+# 상태 초기화
+# ---------------------------
+def init_state():
+    if "schedule" not in st.session_state:
+        st.session_state.schedule = pd.DataFrame(columns=["date","start","end","topic","notes","duration_min"])
+    if "logs" not in st.session_state:
+        st.session_state.logs = []
+init_state()
 
-with tab1:
-    st.write("탭 1에 해당하는 내용입니다.")  # 첫 번째 탭에 표시할 내용
-with tab2:
-    st.write("탭 2에 해당하는 내용입니다.")  # 두 번째 탭에 표시할 내용
+# ---------------------------
+# 간단 피드백 생성 함수 (규칙 기반)
+# ---------------------------
+def simple_feedback(study_text):
+    strengths, improvements, actions = [], [], []
 
-    # st.expander("제목"): 내용을 접었다 펼 수 있는 컨테이너입니다
-with st.expander("ℹ️ 자세한 설명 보기"):
-    st.write("여기에 상세 설명이나 보조 정보를 넣을 수 있습니다.")
+    if "이해" in study_text:
+        strengths.append("핵심 개념을 잘 이해함 👍")
+    if "정리" in study_text:
+        strengths.append("내용을 스스로 요약 정리했음")
+    if "풀이" in study_text:
+        strengths.append("문제 풀이를 시도했음")
 
-    # st.sidebar: 사이드바 영역에 콘텐츠를 배치합니다
-st.sidebar.title("📌 사이드바 메뉴")
-option = st.sidebar.selectbox("옵션을 선택하세요", ["A", "B", "C"])
-st.write("선택한 옵션:", option)
+    if "헷갈" in study_text or "어려" in study_text:
+        improvements.append("헷갈린 개념을 추가 복습하세요.")
+    if "못 풀" in study_text:
+        improvements.append("못 푼 문제를 다시 복습하고 유사 문제를 풀어보세요.")
 
-# 정수 혹은 실수 입력
-age = st.number_input("나이를 입력하세요", min_value=0, max_value=120, step=1)
-st.write("출생년도:", 2026-age)
+    if not strengths:
+        strengths.append("기록을 남긴 것 자체가 훌륭합니다 🎉")
 
-# 여러 옵션 중 하나 선택
-gender = st.radio("성별을 선택하세요", ["남성", "여성", "기타"])
-st.write("선택한 성별:", gender)
+    if not improvements:
+        improvements.append("큰 어려움은 보이지 않습니다. 꾸준히 유지하세요.")
 
-# 드롭다운에서 하나 선택
-color = st.selectbox("좋아하는 정치색을 선택하세요", ["빨강", "파랑", "주황", "노랑"])
-st.write("선택한 색상:", color)
+    actions = [
+        "20분 복습 시간 확보",
+        "5문제 더 풀어보기",
+        "내일은 오늘 헷갈린 개념 복습"
+    ]
+    return {
+        "summary": "간단 자동 피드백입니다.",
+        "strengths": strengths,
+        "improvements": improvements,
+        "actions": random.sample(actions, 2),
+        "confidence": "데모"
+    }
 
-# 여러 개 선택
-subjects = st.multiselect("관심 있는 과목을 선택하세요", ["수학", "국어", "체육"])
-st.write("선택한 과목:", subjects)
+# ---------------------------
+# UI
+# ---------------------------
+st.title("📝 오프라인 학습 플래너 (OpenAI 없이)")
 
-# 날짜 입력
-date = st.date_input("날짜를 선택하세요")
-st.write("선택한 날짜:", date)
+study_date = st.date_input("학습 날짜", value=datetime.date.today())
+study_text = st.text_area("오늘 공부한 내용을 적어보세요", height=250)
 
-# 시간 입력
-time = st.time_input("시간을 선택하세요")
-st.write("선택한 시간:", time)
+if st.button("피드백 받기"):
+    feedback = simple_feedback(study_text)
+    st.session_state.logs.append({"date": str(study_date), "text": study_text, "feedback": feedback})
+    st.success("피드백이 생성되었습니다.")
 
-# 카메라로 사진 촬영
-image_data = st.camera_input("사진을 찍어보세요")
-if image_data:
-    st.image(image_data)
+if st.session_state.logs:
+    last = st.session_state.logs[-1]
+    fb = last["feedback"]
+    st.markdown(f"### 📌 피드백 요약 — {last['date']}")
+    st.write(f"**요약:** {fb['summary']}")
+    st.write("**잘 이해한 부분**")
+    for s in fb["strengths"]:
+        st.write("- " + s)
+    st.write("**추가 학습 필요**")
+    for i in fb["improvements"]:
+        st.write("- " + i)
+    st.write("**권장 액션**")
+    for a in fb["actions"]:
+        st.write("- " + a)
+
+# 일정 관리
+st.subheader("📅 일정 관리")
+with st.form("add_session"):
+    s_date = st.date_input("날짜", value=study_date)
+    col1, col2 = st.columns(2)
+    with col1:
+        s_start = st.time_input("시작 시간", value=datetime.time(19,0))
+    with col2:
+        s_end = st.time_input("종료 시간", value=datetime.time(20,0))
+    s_topic = st.text_input("주제")
+    s_notes = st.text_input("메모")
+    if st.form_submit_button("세션 추가"):
+        dur = int((datetime.datetime.combine(s_date,s_end)-datetime.datetime.combine(s_date,s_start)).total_seconds()//60)
+        new_row = {"date": str(s_date), "start": s_start.strftime("%H:%M"), "end": s_end.strftime("%H:%M"), "topic": s_topic, "notes": s_notes, "duration_min": dur}
+        st.session_state.schedule = pd.concat([st.session_state.schedule, pd.DataFrame([new_row])], ignore_index=True)
+        st.success("세션이 추가되었습니다.")
+
+st.dataframe(st.session_state.schedule, use_container_width=True)
